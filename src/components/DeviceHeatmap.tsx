@@ -26,6 +26,18 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
     const groups = Array.from(new Set(devices.map(d => d.group.name)));
     const categories = Array.from(new Set(devices.map(d => d.ai_classification.device_category)));
 
+    // Shorten category names for better display
+    const shortenCategoryName = (category: string) => {
+      const nameMap: Record<string, string> = {
+        'Network Infrastructure': 'Network',
+        'Workstation': 'Workstation',
+        'Mobile': 'Mobile',
+        'IoT': 'IoT',
+        'Printer': 'Printer'
+      };
+      return nameMap[category] || category;
+    };
+
     const heatmapData: any[] = [];
     groups.forEach(group => {
       categories.forEach(category => {
@@ -75,7 +87,7 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
         .attr("font-size", "14px")
         .attr("font-weight", "bold")
         .attr("fill", "#374151")
-        .text(category);
+        .text(shortenCategoryName(category));
 
       // Create cells for this category
       const cells = svg.selectAll(`.cell-${categoryIndex}`)
@@ -99,25 +111,30 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
           }
         });
 
-      // Add count labels
+      // Add count labels with better visibility
       cells.append("text")
         .attr("x", d => xScale(d.group)! + xScale.bandwidth() / 2)
         .attr("y", yOffset + (heatmapHeight - 20) / 2)
         .attr("text-anchor", "middle")
         .attr("dy", "-0.3em")
-        .attr("font-size", "16px")
+        .attr("font-size", "18px")
         .attr("font-weight", "bold")
-        .attr("fill", d => d.count > 2 ? "white" : "#374151")
+        .attr("fill", "white")
+        .attr("stroke", "#000")
+        .attr("stroke-width", "0.5")
         .text(d => d.count);
 
-      // Add active count
+      // Add active count with better visibility
       cells.append("text")
         .attr("x", d => xScale(d.group)! + xScale.bandwidth() / 2)
         .attr("y", yOffset + (heatmapHeight - 20) / 2)
         .attr("text-anchor", "middle")
-        .attr("dy", "1em")
-        .attr("font-size", "12px")
-        .attr("fill", d => d.count > 2 ? "white" : "#374151")
+        .attr("dy", "1.2em")
+        .attr("font-size", "13px")
+        .attr("font-weight", "600")
+        .attr("fill", "white")
+        .attr("stroke", "#000")
+        .attr("stroke-width", "0.3")
         .text(d => `${d.activeCount} active`);
 
       // Add confidence indicator
