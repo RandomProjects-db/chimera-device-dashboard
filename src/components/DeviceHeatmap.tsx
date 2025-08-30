@@ -18,11 +18,11 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const width = 1100;
-    const height = 650;
-    const margin = { top: 150, right: 150, bottom: 80, left: 250 };
+    const width = 800;
+    const height = 800;
+    const margin = { top: 40, right: 50, bottom: 20, left: 150 };
 
-    // Prepare data for heatmap
+    // Prepare data for heatmaps
     const groups = Array.from(new Set(devices.map(d => d.group.name)));
     const categories = Array.from(new Set(devices.map(d => d.ai_classification.device_category)));
 
@@ -46,160 +46,156 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       });
     });
 
-    // Scales
-    const xScale = d3.scaleBand()
-      .domain(categories)
-      .range([margin.left, width - margin.right])
-      .padding(0.1);
+    // Create separate heatmap for each category
+    const heatmapHeight = 120;
+    const spacing = 20;
 
-    const yScale = d3.scaleBand()
-      .domain(groups)
-      .range([margin.top, height - margin.bottom])
-      .padding(0.1);
+    categories.forEach((category, categoryIndex) => {
+      const yOffset = categoryIndex * (heatmapHeight + spacing) + margin.top;
+      
+      // Filter data for this category
+      const categoryData = heatmapData.filter(d => d.category === category && d.count > 0);
+      
+      if (categoryData.length === 0) return;
 
-    const colorScale = d3.scaleSequential(d3.interpolateRdYlBu)
-      .domain([0, d3.max(heatmapData, d => d.count) || 1]);
+      // Create scales for this heatmap
+      const xScale = d3.scaleBand()
+        .domain(groups)
+        .range([margin.left, width - margin.right])
+        .padding(0.1);
 
-    // Draw heatmap cells
-    const cells = svg.selectAll(".cell")
-      .data(heatmapData.filter(d => d.count > 0))
-      .enter().append("g")
-      .attr("class", "cell")
-      .style("cursor", "pointer");
+      const colorScale = d3.scaleSequential(d3.interpolateBlues)
+        .domain([0, d3.max(categoryData, d => d.count) || 1]);
 
-    cells.append("rect")
-      .attr("x", d => xScale(d.category)!)
-      .attr("y", d => yScale(d.group)!)
-      .attr("width", xScale.bandwidth())
-      .attr("height", yScale.bandwidth())
-      .attr("fill", d => colorScale(d.count))
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 2)
-      .on("click", (event, d) => {
-        if (d.devices.length > 0) {
-          onDeviceClick(d.devices[0]);
-        }
-      });
+      // Add category title
+      svg.append("text")
+        .attr("x", margin.left - 10)
+        .attr("y", yOffset + heatmapHeight / 2)
+        .attr("text-anchor", "end")
+        .attr("font-size", "14px")
+        .attr("font-weight", "bold")
+        .attr("fill", "#374151")
+        .text(category);
 
-    // Add count labels
-    cells.append("text")
-      .attr("x", d => xScale(d.category)! + xScale.bandwidth() / 2)
-      .attr("y", d => yScale(d.group)! + yScale.bandwidth() / 2)
-      .attr("text-anchor", "middle")
-      .attr("dy", "-0.2em")
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
-      .attr("fill", d => d.count > 3 ? "white" : "black")
-      .text(d => d.count);
+      // Create cells for this category
+      const cells = svg.selectAll(`.cell-${categoryIndex}`)
+        .data(categoryData)
+        .enter().append("g")
+        .attr("class", `cell-${categoryIndex}`)
+        .style("cursor", "pointer");
 
-    // Add active count
-    cells.append("text")
-      .attr("x", d => xScale(d.category)! + xScale.bandwidth() / 2)
-      .attr("y", d => yScale(d.group)! + yScale.bandwidth() / 2)
-      .attr("text-anchor", "middle")
-      .attr("dy", "1em")
-      .attr("font-size", "10px")
-      .attr("fill", d => d.count > 3 ? "white" : "black")
-      .text(d => `${d.activeCount} active`);
+      cells.append("rect")
+        .attr("x", d => xScale(d.group)!)
+        .attr("y", yOffset)
+        .attr("width", xScale.bandwidth())
+        .attr("height", heatmapHeight - 20)
+        .attr("fill", d => colorScale(d.count))
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 2)
+        .attr("rx", 4)
+        .on("click", (event, d) => {
+          if (d.devices.length > 0) {
+            onDeviceClick(d.devices[0]);
+          }
+        });
 
-    // Add confidence indicator
-    cells.append("circle")
-      .attr("cx", d => xScale(d.category)! + xScale.bandwidth() - 10)
-      .attr("cy", d => yScale(d.group)! + 10)
-      .attr("r", 4)
-      .attr("fill", d => d.avgConfidence > 0.8 ? "#10B981" : d.avgConfidence > 0.6 ? "#F59E0B" : "#EF4444");
+      // Add count labels
+      cells.append("text")
+        .attr("x", d => xScale(d.group)! + xScale.bandwidth() / 2)
+        .attr("y", yOffset + (heatmapHeight - 20) / 2)
+        .attr("text-anchor", "middle")
+        .attr("dy", "-0.3em")
+        .attr("font-size", "16px")
+        .attr("font-weight", "bold")
+        .attr("fill", d => d.count > 2 ? "white" : "#374151")
+        .text(d => d.count);
 
-    // Add axes
-    svg.append("g")
-      .attr("transform", `translate(0, ${margin.top})`)
-      .call(d3.axisTop(xScale))
-      .selectAll("text")
-      .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end")
-      .attr("dx", "-1em")
-      .attr("dy", "-0.5em")
-      .style("font-size", "13px")
-      .style("font-weight", "500")
-      .style("fill", "#374151");
+      // Add active count
+      cells.append("text")
+        .attr("x", d => xScale(d.group)! + xScale.bandwidth() / 2)
+        .attr("y", yOffset + (heatmapHeight - 20) / 2)
+        .attr("text-anchor", "middle")
+        .attr("dy", "1em")
+        .attr("font-size", "12px")
+        .attr("fill", d => d.count > 2 ? "white" : "#374151")
+        .text(d => `${d.activeCount} active`);
 
-    svg.append("g")
-      .attr("transform", `translate(${margin.left}, 0)`)
-      .call(d3.axisLeft(yScale))
-      .selectAll("text")
-      .style("font-size", "13px")
-      .style("font-weight", "500")
-      .style("fill", "#374151");
+      // Add confidence indicator
+      cells.append("circle")
+        .attr("cx", d => xScale(d.group)! + xScale.bandwidth() - 15)
+        .attr("cy", yOffset + 15)
+        .attr("r", 5)
+        .attr("fill", d => d.avgConfidence > 0.8 ? "#10B981" : d.avgConfidence > 0.6 ? "#F59E0B" : "#EF4444");
 
-    // Add axis labels
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", 20)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
-      .text("Device Categories");
+      // Add group labels (only for first category)
+      if (categoryIndex === 0) {
+        svg.append("g")
+          .selectAll("text")
+          .data(groups)
+          .enter().append("text")
+          .attr("x", d => xScale(d)! + xScale.bandwidth() / 2)
+          .attr("y", yOffset - 10)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "12px")
+          .attr("font-weight", "500")
+          .attr("fill", "#374151")
+          .text(d => d);
+      }
+    });
 
-    svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("x", -height / 2)
-      .attr("y", 20)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .attr("font-weight", "bold")
-      .text("Groups");
-
-    // Add color legend
-    const legendWidth = 200;
-    const legendHeight = 20;
+    // Add legend
+    const legendY = categories.length * (heatmapHeight + spacing) + margin.top + 20;
     const legend = svg.append("g")
-      .attr("transform", `translate(${width - margin.right + 20}, ${margin.top})`);
-
-    const legendScale = d3.scaleLinear()
-      .domain(colorScale.domain())
-      .range([0, legendWidth]);
-
-    const legendAxis = d3.axisBottom(legendScale)
-      .ticks(5);
-
-    const gradient = svg.append("defs")
-      .append("linearGradient")
-      .attr("id", "legend-gradient")
-      .attr("x1", "0%").attr("y1", "0%")
-      .attr("x2", "100%").attr("y2", "0%");
-
-    gradient.selectAll("stop")
-      .data(d3.range(0, 1.1, 0.1))
-      .enter().append("stop")
-      .attr("offset", d => `${d * 100}%`)
-      .attr("stop-color", d => colorScale(d * (colorScale.domain()[1] - colorScale.domain()[0]) + colorScale.domain()[0]));
-
-    legend.append("rect")
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#legend-gradient)");
-
-    legend.append("g")
-      .attr("transform", `translate(0, ${legendHeight})`)
-      .call(legendAxis);
+      .attr("transform", `translate(${margin.left}, ${legendY})`);
 
     legend.append("text")
-      .attr("x", legendWidth / 2)
-      .attr("y", -5)
-      .attr("text-anchor", "middle")
+      .attr("x", 0)
+      .attr("y", 0)
       .attr("font-size", "12px")
-      .text("Device Count");
+      .attr("font-weight", "bold")
+      .text("Legend:");
+
+    legend.append("text")
+      .attr("x", 0)
+      .attr("y", 20)
+      .attr("font-size", "11px")
+      .text("Numbers show: Total devices / Active devices");
+
+    // Confidence legend
+    const confidenceItems = [
+      { color: "#10B981", label: "High confidence (>80%)" },
+      { color: "#F59E0B", label: "Medium confidence (60-80%)" },
+      { color: "#EF4444", label: "Low confidence (<60%)" }
+    ];
+
+    confidenceItems.forEach((item, i) => {
+      const legendItem = legend.append("g")
+        .attr("transform", `translate(250, ${i * 15})`);
+
+      legendItem.append("circle")
+        .attr("r", 5)
+        .attr("fill", item.color);
+
+      legendItem.append("text")
+        .attr("x", 12)
+        .attr("y", 4)
+        .attr("font-size", "11px")
+        .text(item.label);
+    });
 
   }, [devices, onDeviceClick]);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-4">
-      <h3 className="text-lg font-semibold mb-4">Device Distribution Heatmap</h3>
-      <svg
-        ref={svgRef}
-        width="1100"
-        height="650"
-        className="border border-gray-200 rounded"
-      />
+      <h3 className="text-lg font-semibold mb-4">Device Distribution by Category</h3>
+      <div className="overflow-x-auto">
+        <svg
+          ref={svgRef}
+          width="800"
+          height="800"
+          className="border border-gray-200 rounded"
+        />
+      </div>
     </div>
   );
 }
