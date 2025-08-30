@@ -18,9 +18,9 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const width = 1000;
-    const height = 600;
-    const margin = { top: 120, right: 150, bottom: 80, left: 220 };
+    const width = 1100;
+    const height = 650;
+    const margin = { top: 150, right: 150, bottom: 80, left: 250 };
 
     // Prepare data for heatmap
     const groups = Array.from(new Set(devices.map(d => d.group.name)));
@@ -116,16 +116,18 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       .selectAll("text")
       .attr("transform", "rotate(-45)")
       .style("text-anchor", "end")
-      .attr("dx", "-0.8em")
+      .attr("dx", "-1em")
       .attr("dy", "-0.5em")
-      .style("font-size", "12px")
+      .style("font-size", "13px")
+      .style("font-weight", "500")
       .style("fill", "#374151");
 
     svg.append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
       .call(d3.axisLeft(yScale))
       .selectAll("text")
-      .style("font-size", "12px")
+      .style("font-size", "13px")
+      .style("font-weight", "500")
       .style("fill", "#374151");
 
     // Add axis labels
@@ -194,8 +196,8 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       <h3 className="text-lg font-semibold mb-4">Device Distribution Heatmap</h3>
       <svg
         ref={svgRef}
-        width="1000"
-        height="600"
+        width="1100"
+        height="650"
         className="border border-gray-200 rounded"
       />
     </div>
