@@ -84,25 +84,25 @@ export default function DeviceCard({ device, onAction }: DeviceCardProps) {
             <div className="grid grid-cols-2 gap-1 text-xs">
               <button
                 onClick={() => handleAction('toggle_block', 'social_media')}
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                className="px-2 py-1 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded font-medium"
               >
                 Social Media
               </button>
               <button
                 onClick={() => handleAction('toggle_block', 'streaming')}
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                className="px-2 py-1 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded font-medium"
               >
                 Streaming
               </button>
               <button
                 onClick={() => handleAction('toggle_block', 'gaming')}
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                className="px-2 py-1 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded font-medium"
               >
                 Gaming
               </button>
               <button
                 onClick={() => handleAction('toggle_block', 'youtube')}
-                className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded"
+                className="px-2 py-1 bg-gray-200 text-gray-800 hover:bg-gray-300 rounded font-medium"
               >
                 YouTube
               </button>

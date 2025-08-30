@@ -69,7 +69,7 @@
       "UAP/6.5 EdgeOS"
     ],
     "is_active": true,
-    "has_custom_blocklist": false,
+    "has_custom_blocklist": true,
     "group": {
       "id": 4,
       "name": "IoT",
@@ -101,7 +101,7 @@
       "netflix": false,
       "youtube": false,
       "ai": false,
-      "safesearch": false
+      "safesearch": true
     },
     "ai_classification": {
       "device_type": "Access Point",

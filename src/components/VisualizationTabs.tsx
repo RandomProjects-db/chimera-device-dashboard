@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Device } from '@/types/device';
 import NetworkGraph from './NetworkGraph';
 import RadialCluster from './RadialCluster';
@@ -26,6 +26,32 @@ export default function VisualizationTabs({ devices, onDeviceAction }: Visualiza
   const handleDeviceClick = (device: Device) => {
     setSelectedDevice(device);
   };
+
+  const handleDeviceAction = async (deviceId: number, action: string, category?: string) => {
+    try {
+      const updatedDevice = await onDeviceAction(deviceId, action, category);
+      // Update selected device if it's the one that was modified
+      if (selectedDevice && selectedDevice.id === deviceId) {
+        // Find the updated device from the devices array
+        const newDevice = devices.find(d => d.id === deviceId);
+        if (newDevice) {
+          setSelectedDevice(newDevice);
+        }
+      }
+    } catch (error) {
+      console.error('Action failed:', error);
+    }
+  };
+
+  // Sync selected device with devices array when devices update
+  useEffect(() => {
+    if (selectedDevice) {
+      const updatedDevice = devices.find(d => d.id === selectedDevice.id);
+      if (updatedDevice) {
+        setSelectedDevice(updatedDevice);
+      }
+    }
+  }, [devices, selectedDevice]);
 
   return (
     <div className="space-y-6">
@@ -67,7 +93,7 @@ export default function VisualizationTabs({ devices, onDeviceAction }: Visualiza
                   <DeviceCard 
                     key={device.id} 
                     device={device} 
-                    onAction={onDeviceAction}
+                    onAction={handleDeviceAction}
                   />
                 ))}
               </div>
@@ -80,7 +106,7 @@ export default function VisualizationTabs({ devices, onDeviceAction }: Visualiza
           {selectedDevice ? (
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h3 className="text-lg font-semibold mb-4">Device Details</h3>
-              <DeviceCard device={selectedDevice} onAction={onDeviceAction} />
+              <DeviceCard device={selectedDevice} onAction={handleDeviceAction} />
               
               <div className="mt-6 space-y-4">
                 <div>
@@ -97,7 +123,7 @@ export default function VisualizationTabs({ devices, onDeviceAction }: Visualiza
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">AI Classification</h4>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm text-gray-700">
                     <div><strong>Type:</strong> {selectedDevice.ai_classification.device_type}</div>
                     <div><strong>Category:</strong> {selectedDevice.ai_classification.device_category}</div>
                     <div><strong>Confidence:</strong> {Math.round(selectedDevice.ai_classification.confidence * 100)}%</div>
@@ -107,7 +133,7 @@ export default function VisualizationTabs({ devices, onDeviceAction }: Visualiza
 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-2">Network Info</h4>
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-1 text-sm text-gray-700">
                     <div><strong>Hostname:</strong> {selectedDevice.hostname}</div>
                     <div><strong>MAC:</strong> {selectedDevice.mac}</div>
                     <div><strong>OS:</strong> {selectedDevice.os_name} ({selectedDevice.os_accuracy}% accuracy)</div>
