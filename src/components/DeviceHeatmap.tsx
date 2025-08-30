@@ -18,9 +18,9 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    const width = 800;
-    const height = 400;
-    const margin = { top: 50, right: 100, bottom: 50, left: 150 };
+    const width = 900;
+    const height = 500;
+    const margin = { top: 80, right: 120, bottom: 60, left: 180 };
 
     // Prepare data for heatmap
     const groups = Array.from(new Set(devices.map(d => d.group.name)));
@@ -89,7 +89,7 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       .attr("dy", "-0.2em")
       .attr("font-size", "14px")
       .attr("font-weight", "bold")
-      .attr("fill", d => d.count > 2 ? "white" : "black")
+      .attr("fill", d => d.count > 3 ? "white" : "black")
       .text(d => d.count);
 
     // Add active count
@@ -99,7 +99,7 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       .attr("text-anchor", "middle")
       .attr("dy", "1em")
       .attr("font-size", "10px")
-      .attr("fill", d => d.count > 2 ? "white" : "black")
+      .attr("fill", d => d.count > 3 ? "white" : "black")
       .text(d => `${d.activeCount} active`);
 
     // Add confidence indicator
@@ -115,11 +115,18 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       .call(d3.axisTop(xScale))
       .selectAll("text")
       .attr("transform", "rotate(-45)")
-      .style("text-anchor", "end");
+      .style("text-anchor", "end")
+      .attr("dx", "-0.8em")
+      .attr("dy", "-0.5em")
+      .style("font-size", "12px")
+      .style("fill", "#374151");
 
     svg.append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
-      .call(d3.axisLeft(yScale));
+      .call(d3.axisLeft(yScale))
+      .selectAll("text")
+      .style("font-size", "12px")
+      .style("fill", "#374151");
 
     // Add axis labels
     svg.append("text")
@@ -187,8 +194,8 @@ export default function DeviceHeatmap({ devices, onDeviceClick }: DeviceHeatmapP
       <h3 className="text-lg font-semibold mb-4">Device Distribution Heatmap</h3>
       <svg
         ref={svgRef}
-        width="800"
-        height="400"
+        width="900"
+        height="500"
         className="border border-gray-200 rounded"
       />
     </div>

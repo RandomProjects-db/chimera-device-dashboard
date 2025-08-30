@@ -11,6 +11,7 @@ interface NetworkGraphProps {
 
 export default function NetworkGraph({ devices, onDeviceClick }: NetworkGraphProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const zoomRef = useRef<any>(null);
 
   useEffect(() => {
     if (!svgRef.current || devices.length === 0) return;
@@ -22,6 +23,19 @@ export default function NetworkGraph({ devices, onDeviceClick }: NetworkGraphPro
     const height = 600;
     const centerX = width / 2;
     const centerY = height / 2;
+
+    // Add zoom behavior
+    const zoom = d3.zoom()
+      .scaleExtent([0.1, 4])
+      .on("zoom", (event) => {
+        container.attr("transform", event.transform);
+      });
+
+    zoomRef.current = zoom;
+    svg.call(zoom as any);
+
+    // Create container for zoomable content
+    const container = svg.append("g");
 
     // Create nodes with enhanced properties
     const nodes = devices.map(device => ({
@@ -42,7 +56,7 @@ export default function NetworkGraph({ devices, onDeviceClick }: NetworkGraphPro
       .force("collision", d3.forceCollide().radius(20));
 
     // Create links
-    const link = svg.append("g")
+    const link = container.append("g")
       .selectAll("line")
       .data(links)
       .enter().append("line")
@@ -51,7 +65,7 @@ export default function NetworkGraph({ devices, onDeviceClick }: NetworkGraphPro
       .attr("stroke-width", 2);
 
     // Create nodes
-    const node = svg.append("g")
+    const node = container.append("g")
       .selectAll("g")
       .data(nodes)
       .enter().append("g")
@@ -134,13 +148,38 @@ export default function NetworkGraph({ devices, onDeviceClick }: NetworkGraphPro
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-4">
-      <h3 className="text-lg font-semibold mb-4">Network Topology</h3>
-      <svg
-        ref={svgRef}
-        width="800"
-        height="600"
-        className="border border-gray-200 rounded"
-      />
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Network Topology</h3>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              if (zoomRef.current && svgRef.current) {
+                const svg = d3.select(svgRef.current);
+                svg.transition().call(
+                  zoomRef.current.transform,
+                  d3.zoomIdentity.scale(1).translate(0, 0)
+                );
+              }
+            }}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+          >
+            Reset View
+          </button>
+        </div>
+      </div>
+      <div className="relative">
+        <svg
+          ref={svgRef}
+          width="800"
+          height="600"
+          className="border border-gray-200 rounded"
+        />
+        <div className="absolute top-2 left-2 bg-white bg-opacity-90 p-2 rounded text-xs text-gray-600">
+          <div>🖱️ Drag to pan</div>
+          <div>🔍 Scroll to zoom</div>
+          <div>📱 Drag nodes to move</div>
+        </div>
+      </div>
     </div>
   );
 }
