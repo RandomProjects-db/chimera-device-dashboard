@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Device } from '@/types/device';
 import { api } from '@/services/api';
-import DeviceCard from '@/components/DeviceCard';
 import DeviceStats from '@/components/DeviceStats';
 import DeviceFilters from '@/components/DeviceFilters';
+import VisualizationTabs from '@/components/VisualizationTabs';
 
 export default function Dashboard() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -69,9 +69,14 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-8">
-          Chimera Device Dashboard
-        </h1>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Chimera Device Dashboard
+          </h1>
+          <p className="text-gray-600">
+            Visualize, monitor, and manage your network devices
+          </p>
+        </div>
         
         <DeviceStats devices={filteredDevices} />
         
@@ -80,15 +85,10 @@ export default function Dashboard() {
           onFilter={setFilteredDevices} 
         />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDevices.map(device => (
-            <DeviceCard 
-              key={device.id} 
-              device={device} 
-              onAction={handleDeviceAction}
-            />
-          ))}
-        </div>
+        <VisualizationTabs 
+          devices={filteredDevices}
+          onDeviceAction={handleDeviceAction}
+        />
       </div>
     </div>
   );
