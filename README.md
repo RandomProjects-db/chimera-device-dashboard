@@ -2,6 +2,10 @@
 
 A visualization-first dashboard for managing network devices with real-time actions and insights.
 
+## 🎥 Demo Video
+
+**[Watch Live Demo](https://www.youtube.com/watch?v=jQ8hHeGImWo)** - See the dashboard in action with all visualizations and device management features.
+
 ## 🎯 Challenge Solution
 
 This project implements the **Chimera Device Viz Challenge 2** with:
